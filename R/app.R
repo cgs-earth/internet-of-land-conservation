@@ -4,7 +4,7 @@ library(sf)
 library(DT)
 
 ui <- fluidPage(
-  titlePanel("Comprehensive Geospatial Editor"),
+  titlePanel("CWPDA data wizard"),
   sidebarLayout(
     sidebarPanel(
       fileInput("fileUpload", "Choose a Geospatial File (zipped shapefile .zip, .geojson", accept = c(".zip", ".geojson", ".json")),
