@@ -30,20 +30,46 @@ ui <-
              fluidPage(
                div(class = "content-wrapper",  # This div uses the custom CSS class
                    wellPanel(
-                     h3("Welcome to the WDPA/OECM Data Wizard!"),
-                     p(
-                       "This tool is designed to assist with preparing and validating your geospatial data for the WDPA or OECM databases. Please follow the steps outlined to complete the data preparation and validation process."
+                     # The welcome and introductory text
+                     h1("Welcome to the Protected Planet Data Wizard"),
+                     p("This interactive tool is your assistant for preparing and validating geospatial data for submission to the World Database on Protected Areas (WDPA) and the Other Effective Area-Based Conservation Measures (OECM) database. The WDPA and OECM are pivotal global resources for the conservation of biodiversity, compiled through collaboration with various organizations under the guidance of the United Nations Environment Programme World Conservation Monitoring Centre (UNEP-WCMC) and the International Union for Conservation of Nature (IUCN)."),
+                     
+                     h2("How Does It Work?"),
+                     p("The Data Wizard simplifies the data submission process, ensuring that your datasets meet the Protected Planet data standards, including proper formatting and attribute requirements."),
+                     
+                     h2("Key Requirements for Data Submission:"),
+                    tags$ul(
+                       tags$li("Areas must conform to the IUCN definition of a protected area or the CBD definition of an OECM."),
+                       tags$li("Submissions must include both spatial data (in GIS format) and an associated attribute table."),
+                       tags$li("The source of the information must be clearly stated in a Source Table."),
+                       tags$li("A signed WDPA Data Contributor Agreement is required.")
                      ),
-                     p("Step 1: Fill out the source table for your dataset."),
-                     p("Step 2: Upload and inspect your geospatial file."),
-                     p("Step 3: Map your data to the standard and download the package."),
+                     
+                     h2("Getting Started:"),
+                    tags$ul(
+                      tags$li(strong("Before Yur Begin: Select your database:"), " Choose whether you are submitting data for the WDPA or OECM database."),
+                      tags$li(strong("Step 1: Fill out the Source Table:"), " Provide detailed information about your dataset, including metadata ID, dataset title, responsible party, and more."),
+                      tags$li(strong("Step 2: Upload your geospatial file:"), " Acceptable formats include zipped shapefiles (.zip) or GeoJSON files (.geojson, .json)."),
+                      tags$li(strong("Step 3: Map your data and download your package"), " Align your data with the Protected Planet standards by mapping attributes to the required fields. Once validated, download your data package for submission to Protected Planet.")
+                    ),
+                     
+                     p("We encourage data providers to include information beyond the minimum required attributes to enhance the analysis and reporting capabilities on protected areas. Your contribution is vital for the ongoing conservation efforts and helps in maintaining up-to-date and accurate global databases."),
+                     p("Thank you for contributing to the global conservation effort through Protected Planet! https://protectedplanet.net"),
+                     
+                     #download buttons
+                     downloadButton("downloadGuide", "Download Data Submission Guide"),
+                     downloadButton("downloadStandards", "Download Data Standards Excel"),
+                     downloadButton("downloadAgreement", "Download Contributor Agreement Template")
+                     
+ 
+                   ),
                      
                      radioButtons("databaseType", "Select Database you would like to submit data to:",
                                   choices = c("WDPA" = "WDPA", "OECM" = "OECM"),
                                   selected = "WDPA"),
                      actionButton("startBtn", "Get Started", class = "btn-primary")
-                   ))
-             )),
+                   
+             ))),
     tabPanel(
       "Step 1: Source Table Editor",
       div(class = "content-wrapper",  # This div uses the custom CSS class
@@ -389,7 +415,7 @@ server <- function(input, output, session) {
         "ORIG_NAME",
         "DESIG",
         "DESIG_TYPE",
-        "INC_CRIT",
+        "INT_CRIT",
         "MARINE",
         "REP_M_AREA",
         "GIS_M_AREA",
@@ -436,7 +462,8 @@ server <- function(input, output, session) {
         "GOV_TYPE",
         "OWN_TYPE",
         "MANG_AUTH",
-        "MANG_PLAN"
+        "MANG_PLAN",
+        "SUB_LOC"
       )
     
     completeFields_oecm <-
@@ -449,7 +476,8 @@ server <- function(input, output, session) {
         "MANG_AUTH",
         "MANG_PLAN",
         "CONS_OBJ",
-        "SUPP_INFO"
+        "SUPP_INFO",
+        "SUB_LOC"
       )
     
     # Choose fields based on selection
@@ -560,9 +588,9 @@ server <- function(input, output, session) {
     for (fieldName in fieldNames) {
       inputId <- paste0("map", gsub("[^[:alnum:]]", "", fieldName))
       selectedColumn <- input[[inputId]]
+      print(paste("Checking if", selectedColumn, "is in names(df):", selectedColumn %in% names(df)))
       
-      if (selectedColumn != "None" &&
-          selectedColumn %in% names(df)) {
+      if (!is.null(selectedColumn) && !is.na(selectedColumn) && selectedColumn != "None" && selectedColumn %in% names(df)) {
         names(df)[names(df) == selectedColumn] <- fieldName
       }
     }
@@ -649,6 +677,34 @@ server <- function(input, output, session) {
       # metadataDf <- data.frame(key = names(metadataList), value = unlist(metadataList), stringsAsFactors = FALSE)
       write.csv(metadataDf, metadataFile, row.names = FALSE)
       zip(file, files = c(geojsonFile, metadataFile))
+    }
+  )
+  
+  output$downloadGuide <- downloadHandler(
+    filename = function() {
+      "protectedplanet_data_guide.pdf"
+    },
+    content = function(file) {
+      file.copy("protectedplanet_data_guide.pdf", file)
+    }
+  )
+  
+  # Handler for downloading the Data Standards Excel file
+  output$downloadStandards <- downloadHandler(
+    filename = function() {
+      "protectedplanet_data_standards.xlsx"
+    },
+    content = function(file) {
+      file.copy("protectedplanet_data_standards.xlsx", file)
+    }
+  )
+  
+  output$downloadAgreement <- downloadHandler(
+    filename = function() {
+      "agreement.pdf"
+    },
+    content = function(file) {
+      file.copy("agreement.pdf", file)
     }
   )
 }
