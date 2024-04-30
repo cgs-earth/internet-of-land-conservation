@@ -1,10 +1,13 @@
 library(shiny)
 library(leaflet)
+library(bslib)
 library(sf)
 library(DT)
 library(shinythemes)
 library(mapview)
 library(shinyBS)
+library(shinyWidgets)
+library(rlang)
 
 ui <-
   navbarPage(
@@ -238,6 +241,7 @@ ui <-
       "Step 3: Mapping and Download",
       sidebarLayout(
         sidebarPanel(
+          h5("Use these dopdown menus to select which fields in your data correspond to the Protected Planet standard fields"),
           uiOutput("standardMappingUI"),
           actionButton("applyMapping", "Apply Mapping"),
           hr(),
@@ -272,6 +276,9 @@ server <- function(input, output, session) {
   attributeData <-
     reactiveVal() # To store non-geometry attribute data
   geometryData <- reactiveVal()
+  
+  
+  
   validateStandard3 <- function(data) {
     # Assuming 'standard3' is the name after mapping. Adjust if it's dynamic.
     if ("standard3" %in% names(data)) {
@@ -325,6 +332,7 @@ server <- function(input, output, session) {
   #   updateNavbarPage(session, "nav", selected = "Step 3: Mapping and Download")
   # })
   
+  
   observeEvent(input$next2, {
     # This button ensures users can proceed even if they want to re-upload or wait
     updateNavbarPage(session, "nav", selected = "Step 3: Mapping and Download")
@@ -351,7 +359,7 @@ server <- function(input, output, session) {
         shpFiles[!grepl("__MACOSX", shpFiles)] # Exclude macOS system files
       
       if (length(shpFiles) == 1) {
-        spatialData(sf::st_read(shpFiles[1]))
+        spatialData(sf::st_read(shpFiles[1]) %>% st_transform(4326))
         attributeData(st_drop_geometry(spatialData()))
         geometryData(st_geometry(spatialData()))
       } else {
@@ -364,15 +372,15 @@ server <- function(input, output, session) {
           )
         )
       }
-    } else if (fileExt == "geojson" || fileExt == "json") {
-      spatialData(sf::st_read(input$fileUpload$datapath))
+    } else if (fileExt == "geojson" || fileExt == "json" || fileExt =="gpkg") {
+      spatialData(sf::st_read(input$fileUpload$datapath) %>% st_transform(4326))
       attributeData(st_drop_geometry(spatialData()))
       geometryData(st_geometry(spatialData()))
     } else {
       showModal(
         modalDialog(
           title = "Error",
-          "Unsupported file type. Please upload a zipped shapefile or a GeoJSON file.",
+          "Unsupported file type. Please upload a zipped shapefile or a GeoJSON or a GeoPackag file.",
           easyClose = TRUE,
           footer = modalButton("Close")
         )
@@ -480,18 +488,74 @@ server <- function(input, output, session) {
         "SUB_LOC"
       )
     
-    # Choose fields based on selection
-    minimalFields <- if(dbType == "WDPA") {minimalFields_wdpa} else {minimalFields_oecm}
-    completeFields <- if(dbType == "WDPA") {completeFields_wdpa} else {completeFields_oecm}
+
+    # Define field descriptions (examples given, extend as necessary)
+    fieldDescriptions <- list(
+      WDPAID = "Unique identifier for each protected area.",
+      NAME = "The name of a protected area or OECM is the name assigned to the site in legal texts or by its governance authority. The Name field is an open string field and any text is allowed, except for ‘Unnamed’, ‘Unknown’ or similar equivalents. Names do not have to be translated into English but text must be in Latin characters. Accented characters are accepted.",
+      STATUS = "The current status of the protected area: Proposed, Inscribed, Adopted, Designated, Established", 
+      PA_DEF = "This attribute indicates whether the site meets the IUCN definition of a protected area (WDPA only) or the CBD definition of an OECM (OECM database only).",
+      ORIG_NAME = "The name of the protected area or OECM in any language supported by UTF 8 encoding. The Original Name field is an open string field and any text is allowed, except for ‘Unnamed’, ‘Unknown’ or similar equivalents.",
+      DESIG = "The designation of the protected area or OECM in the native language (provided it is supported by UTF 8 encoding)",
+      DESIG_ENG = "The designation of the protected area or OECM in English. This field contains the same value as the “DESIG” field where English is the original language.",
+      DESIG_TYPE = "Category or type of protected area as legally/officially designated or proposed. National, Regional, International, or Not Applicable",
+      IUCN_CAT = "The IUCN protection category. Ia, Ib, II, III, IV, V, VI, Not Reported, Not Applicable, or Not Assigned",
+      INT_CRIT = "Only for UNESCO WOrld Heritage Sites and Ramsar sites. All others “Not Applicable”",
+      MARINE = "Describes whether area is totally or partially marine. 0 (completely terrestrial water), 1 (partially marine and terrestrial), 2 (completely marine)",
+      REP_M_AREA = "Reported area that is within the marine environment in sq km",
+      GIS_M_AREA = "Calculated area within the marine environment in sq km using Mollweide projection",
+      REP_AREA = "Reported total area in sq km",
+      GIS_AREA = "Calculated area in sq km using the Mollweide projection",
+      NO_TAKE = "Taking of liviing or dead natural resources is prohibited in the Marine area: All, PArt, None, Not Reported, Not Applicable (i.e. non-marine area)",
+      NO_TK_AREA = "Total area in sq km of the marine area which is No Take",
+      STATUS_YR = "The year the current status came into force: YYYY or 0 if unknown",
+      GOV_TYPE = "The type of entity that makes decisions about how the area is managed: “Federal or national ministry or agency”, “Sub-national ministry or agency”, “Government-delegated management”, “Transboundary governance”, “Collaborative governance”, “Joint governance”, “Individual landowners”, “Non-profit organizations”, “For-profit organizations”, “Indigenous peoples”, “Local communities”, “Not Reported”",
+      OWN_TYPE = "Legal Ownership type (independent of governance): State, Communal, Individual Landowners, For-profit organisations, Non-profit organisations, Joint ownership, Multiple ownership, Contested, Not Reported",
+      MANG_AUTH = "Management Authority, the specific individual or organization that manages the protected area “Not Reported” if unknown.",
+      MANG_PLAN = "A URL linking to a document or website detailing a management plan or mechanism, or “Not Reported” if unknown.",
+      SUPP_INFO = "Any supporting information on an OECM, such as details on how it fulfills the CBD OECM definition.“Not Reported” if not provided",
+      CONS_OBJ = "For OECM only. The exentent to which biodiversity is a conservation objective: Primary, Secondart, Ancillary",
+      VERIF = "How the site has been verified: State Verified, Expert Verified, Not Reported",
+      METADATAID = "The Metadata ID from Step 1, linking the data with the metadata source table",
+      SUB_LOC = "The subnational location as an ISO 3166-2 sub-national code. See https://en.wikipedia.org/wiki/ISO_3166-2",
+      PARENT_ISO3 = "The ISO3 code of the country that the area resides in. See https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes",
+      ISO3 = "The ISO3 code of the territory that the area resides in. Different from PARENT_ISO3 only in the case for dependent terrirories/ overseas departments"
+      
+      # Add other fields and descriptions as needed
+    )
     
     # Function to generate selectInput for a given field
     generateSelectInput <- function(fieldName) {
-      selectInput(
-        inputId = paste0("map", gsub("[^[:alnum:]]", "", fieldName)),
-        label = paste("Map to", fieldName, ":"),
+      selectId <- paste0("map", gsub("[^[:alnum:]]", "", fieldName))
+      inputField <- selectInput(
+        inputId = selectId,
+        label = paste(fieldName, ":"),
         choices = c("None" = "", colNames)
       )
+      
+      # Use an ID for the help icon
+      helpIconId <- paste0("helpIcon", gsub("[^[:alnum:]]", "", fieldName))
+      helpIcon <- tags$span(
+        tags$i(class = "fa fa-info-circle", id = helpIconId),
+        style = "margin-left: 5px; cursor: help;"
+      )
+      
+      tooltipText = fieldDescriptions[[fieldName]] %||% "No description available"
+      
+      uiOutput <- tags$div(
+        style = "display: flex; align-items: center;",
+        inputField,
+        tipify(helpIcon,  tooltipText, placement="right")
+      )
+      
+      # Return the UI element along with the tooltip ID
+      #list(uiOutput = uiOutput, tooltipId = helpIconId)#
+      uiOutput
     }
+    
+    # Choose fields based on selection
+    minimalFields <- if(dbType == "WDPA") {minimalFields_wdpa} else {minimalFields_oecm}
+    completeFields <- if(dbType == "WDPA") {completeFields_wdpa} else {completeFields_oecm}
     
     fluidRow(column(
       6,
