@@ -21,7 +21,9 @@ jobs:
         with:
           # account and application name (https://<accountName>.shinyapps.io/<appName>)
           appName: wdpa-oecm-wizard
+          appDir: R
           accountName: internetofwater
+          forceUpdate: true
 
           # token and secret obtained from https://www.shinyapps.io/admin/#/tokens
           accountToken: ${{ secrets.SHINYAPPS_TOKEN }}
