@@ -23,7 +23,7 @@ jobs:
           appName: wdpa-oecm-wizard
           appDir: R
           accountName: internetofwater
-          forceUpdate: true
+          forceUpdate: TRUE
 
           # token and secret obtained from https://www.shinyapps.io/admin/#/tokens
           accountToken: ${{ secrets.SHINYAPPS_TOKEN }}
