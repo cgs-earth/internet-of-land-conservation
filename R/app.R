@@ -38,7 +38,7 @@ ui <-
                      p("This interactive tool is your assistant for preparing and validating geospatial data for submission to the World Database on Protected Areas (WDPA) and the Other Effective Area-Based Conservation Measures (OECM) database. The WDPA and OECM are pivotal global resources for the conservation of biodiversity, compiled through collaboration with various organizations under the guidance of the United Nations Environment Programme World Conservation Monitoring Centre (UNEP-WCMC) and the International Union for Conservation of Nature (IUCN)."),
                      
                      h2("How Does It Work?"),
-                     p("The Data Wizard simplifies the data submission process, ensuring that your datasets meet the Protected Planet data standards, including proper formatting and attribute requirements."),
+                     p("The Data Wizard simplifies the data preparation process, ensuring that your datasets meet the Protected Planet data standards, including proper formatting and attribute requirements."),
                      
                      h2("Key Requirements for Data Submission:"),
                     tags$ul(
@@ -50,7 +50,7 @@ ui <-
                      
                      h2("Getting Started:"),
                     tags$ul(
-                      tags$li(strong("Before Yur Begin: Select your database:"), " Choose whether you are submitting data for the WDPA or OECM database."),
+                      tags$li(strong("Before You Begin: Select your database:"), " Choose whether you are preparing data for the WDPA or OECM database."),
                       tags$li(strong("Step 1: Fill out the Source Table:"), " Provide detailed information about your dataset, including metadata ID, dataset title, responsible party, and more."),
                       tags$li(strong("Step 2: Upload your geospatial file:"), " Acceptable formats include zipped shapefiles (.zip) or GeoJSON files (.geojson, .json)."),
                       tags$li(strong("Step 3: Map your data and download your package"), " Align your data with the Protected Planet standards by mapping attributes to the required fields. Once validated, download your data package for submission to Protected Planet.")
@@ -67,7 +67,7 @@ ui <-
  
                    ),
                      
-                     radioButtons("databaseType", "Select Database you would like to submit data to:",
+                     radioButtons("databaseType", "Select Database you would like to prepare data for:",
                                   choices = c("WDPA" = "WDPA", "OECM" = "OECM"),
                                   selected = "WDPA"),
                      actionButton("startBtn", "Get Started", class = "btn-primary")
