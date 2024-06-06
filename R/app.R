@@ -42,7 +42,7 @@ ui <-
                      
                      h2("Key Requirements for Data Submission:"),
                     tags$ul(
-                       tags$li("Areas must conform to the IUCN definition of a protected area or the CBD definition of an OECM."),
+                       tags$li("Areas must conform to the IUCN definition of a private protected area (",a("PPA", href="https://en.wikipedia.org/wiki/Private_protected_area", target="_blank"), ") or the CBD definition of an ", a("OECM", href="https://www.google.com", target="_blank"), "."),
                        tags$li("Submissions must include both spatial data (in GIS format) and an associated attribute table."),
                        tags$li("The source of the information must be clearly stated in a Source Table."),
                        tags$li("A signed WDPA Data Contributor Agreement is required.")
