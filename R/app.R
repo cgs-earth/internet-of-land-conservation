@@ -8,6 +8,11 @@ library(mapview)
 library(shinyBS)
 library(shinyWidgets)
 library(rlang)
+library(readr)
+library(dplyr)
+library(collapse)
+
+
 
 ui <-
   navbarPage(
@@ -26,6 +31,9 @@ ui <-
       body {
         padding-top: 70px; /* Adjust based on navbar height */
       }
+      .warning {
+      background-color: #FFCCCC; /* Light red background */
+    }
     "
       )
     )),
@@ -41,20 +49,20 @@ ui <-
                      p("The Data Wizard simplifies the data preparation process, ensuring that your datasets meet the Protected Planet data standards, including proper formatting and attribute requirements."),
                      
                      h2("Key Requirements for Data Submission:"),
-                    tags$ul(
-                       tags$li("Areas must conform to the IUCN definition of a private protected area (",a("PPA", href="https://en.wikipedia.org/wiki/Private_protected_area", target="_blank"), ") or the CBD definition of an ", a("OECM", href="https://www.google.com", target="_blank"), "."),
+                     tags$ul(
+                       tags$li("Areas must conform to the IUCN definition of a private protected area (",a("PPA", href="https://en.wikipedia.org/wiki/Private_protected_area", target="_blank"),") or the Convention on Biological Diversity's definition of an ", a("OECM", href="https://www.cbd.int/decisions/cop/14/08/02", target="_blank"), "."),
                        tags$li("Submissions must include both spatial data (in GIS format) and an associated attribute table."),
                        tags$li("The source of the information must be clearly stated in a Source Table."),
-                       tags$li("A signed WDPA Data Contributor Agreement is required.")
+                       tags$li("A signed ",a("WDPA Data Contributor Agreement", href="https://raw.githubusercontent.com/cgs-earth/internet-of-land-conservation/master/agreement.pdf", target="_blank"), "is required.")
                      ),
                      
                      h2("Getting Started:"),
-                    tags$ul(
-                      tags$li(strong("Before You Begin: Select your database:"), " Choose whether you are preparing data for the WDPA or OECM database."),
-                      tags$li(strong("Step 1: Fill out the Source Table:"), " Provide detailed information about your dataset, including metadata ID, dataset title, responsible party, and more."),
-                      tags$li(strong("Step 2: Upload your geospatial file:"), " Acceptable formats include zipped shapefiles (.zip) or GeoJSON files (.geojson, .json)."),
-                      tags$li(strong("Step 3: Map your data and download your package"), " Align your data with the Protected Planet standards by mapping attributes to the required fields. Once validated, download your data package for submission to Protected Planet.")
-                    ),
+                     tags$ul(
+                       tags$li(strong("Before You Begin: Select your database:"), " Choose whether you are preparing data for the WDPA or OECM database."),
+                       tags$li(strong("Step 1: Fill out the Source Table:"), " Provide detailed information about your dataset, including metadata ID, dataset title, responsible party, and more."),
+                       tags$li(strong("Step 2: Upload your geospatial file:"), " Acceptable formats include zipped shapefiles (.zip) or GeoJSON files (.geojson, .json)."),
+                       tags$li(strong("Step 3: Map your data and download your package"), " Align your data with the Protected Planet standards by mapping attributes to the required fields. Once validated, download your data package for submission to Protected Planet.")
+                     ),
                      
                      p("We encourage data providers to include information beyond the minimum required attributes to enhance the analysis and reporting capabilities on protected areas. Your contribution is vital for the ongoing conservation efforts and helps in maintaining up-to-date and accurate global databases."),
                      p("Thank you for contributing to the global conservation effort through Protected Planet! https://protectedplanet.net"),
@@ -62,17 +70,15 @@ ui <-
                      #download buttons
                      downloadButton("downloadGuide", "Download Data Submission Guide"),
                      downloadButton("downloadStandards", "Download Data Standards Excel"),
-                     downloadButton("downloadAgreement", "Download Contributor Agreement Template")
                      
- 
                    ),
-                     
-                     radioButtons("databaseType", "Select Database you would like to prepare data for:",
-                                  choices = c("WDPA" = "WDPA", "OECM" = "OECM"),
-                                  selected = "WDPA"),
-                     actionButton("startBtn", "Get Started", class = "btn-primary")
                    
-             ))),
+                   radioButtons("databaseType", "Select Database you would like to prepare data for:",
+                                choices = c("WDPA" = "WDPA", "OECM" = "OECM"),
+                                selected = "WDPA"),
+                   actionButton("startBtn", "Get Started", class = "btn-primary")
+                   
+               ))),
     tabPanel(
       "Step 1: Source Table Editor",
       div(class = "content-wrapper",  # This div uses the custom CSS class
@@ -488,7 +494,7 @@ server <- function(input, output, session) {
         "SUB_LOC"
       )
     
-
+    
     # Define field descriptions (examples given, extend as necessary)
     fieldDescriptions <- list(
       WDPAID = "Unique identifier for each protected area.",
@@ -612,41 +618,19 @@ server <- function(input, output, session) {
     req(spatialData())
     df <- spatialData() # Fetch the current data frame
     
-    # The field names from the Protected Planet Data Standard
+    # List of all potential fields in the standard
     fieldNames <-
       c(
-        "WDPAID",
-        "WDPA_PID",
-        "PA_DEF",
-        "NAME",
-        "ORIG_NAME",
-        "DESIG",
-        "DESIG_ENG",
-        "DESIG_TYPE",
-        "IUCN_CAT",
-        "INT_CRIT",
-        "MARINE",
-        "REP_M_AREA",
-        "GIS_M_AREA",
-        "REP_AREA",
-        "GIS_AREA",
-        "NO_TAKE",
-        "NO_TK_AREA",
-        "STATUS",
-        "STATUS_YR",
-        "GOV_TYPE",
-        "OWN_TYPE",
-        "MANG_AUTH",
-        "MANG_PLAN",
-        "CONS_OBJ",
-        "SUPP_INFO",
-        "VERIF",
-        "RESTRICT",
-        "METADATAID",
-        "SUB_LOC",
-        "PARENT_ISO3",
-        "ISO3"
+        "WDPAID", "WDPA_PID", "PA_DEF", "NAME", "ORIG_NAME", "DESIG", 
+        "DESIG_ENG", "DESIG_TYPE", "IUCN_CAT", "INT_CRIT", "MARINE",
+        "REP_M_AREA", "GIS_M_AREA", "REP_AREA", "GIS_AREA", "NO_TAKE",
+        "NO_TK_AREA", "STATUS", "STATUS_YR", "GOV_TYPE", "OWN_TYPE",
+        "MANG_AUTH", "MANG_PLAN", "CONS_OBJ", "SUPP_INFO", "VERIF",
+        "RESTRICT", "METADATAID", "SUB_LOC", "PARENT_ISO3", "ISO3"
       )
+    
+    # Dictionary to store mapping from user selections
+    userMappings <- list()
     
     # Iterate through each field name, applying mappings as specified by the user
     for (fieldName in fieldNames) {
@@ -659,9 +643,101 @@ server <- function(input, output, session) {
       }
     }
     
+    dbType <- input$databaseType
+    minimalFields_wdpa <-
+      c(
+        "WDPAID",
+        "WDPA_PID",
+        "PA_DEF",
+        "NAME",
+        "ORIG_NAME",
+        "DESIG",
+        "DESIG_TYPE",
+        "INT_CRIT",
+        "MARINE",
+        "REP_M_AREA",
+        "GIS_M_AREA",
+        "REP_AREA",
+        "GIS_AREA",
+        "STATUS",
+        "STATUS_YR",
+        "VERIF",
+        "RESTRICT",
+        "METADATAID",
+        "PARENT_ISO3",
+        "ISO3"
+      )
+    
+    minimalFields_oecm <-
+      c(
+        "WDPAID",
+        "WDPA_PID",
+        "PA_DEF",
+        "NAME",
+        "ORIG_NAME",
+        "DESIG",
+        "DESIG_TYPE",
+        "MARINE",
+        "REP_M_AREA",
+        "GIS_M_AREA",
+        "REP_AREA",
+        "GIS_AREA",
+        "STATUS",
+        "STATUS_YR",
+        "VERIF",
+        "RESTRICT",
+        "METADATAID",
+        "PARENT_ISO3",
+        "ISO3"
+      )
+    
+    completeFields_wdpa <-
+      c(
+        "DESIG_ENG",
+        "IUCN_CAT",
+        "NO_TAKE",
+        "NO_TK_AREA",
+        "GOV_TYPE",
+        "OWN_TYPE",
+        "MANG_AUTH",
+        "MANG_PLAN",
+        "SUB_LOC"
+      )
+    
+    completeFields_oecm <-
+      c(
+        "DESIG_ENG",
+        "NO_TAKE",
+        "NO_TK_AREA",
+        "GOV_TYPE",
+        "OWN_TYPE",
+        "MANG_AUTH",
+        "MANG_PLAN",
+        "CONS_OBJ",
+        "SUPP_INFO",
+        "SUB_LOC"
+      )
+    
+    fields <- if(dbType == "WDPA") {c(minimalFields_wdpa,completeFields_oecm)} else {c(minimalFields_oecm,completeFields_oecm)}
+    
+    # Create an empty sf data frame with these fields
+    intermediate_df <- st_sf(setNames(lapply(fields, function(x) vector("character", 0)), fields), 
+                             geometry = st_sfc(), crs=4326)
+    
+    
+    print(str(intermediate_df))
+    # update df 
+    df <- dplyr::bind_rows(intermediate_df,df) 
+    # df <- readr::type_convert(df)
+    print(str(df))
+    
     # Update the reactive value with the modified data frame
     spatialData(df)
+    
+    # Move to the new step 4
+    #  updateNavbarPage(session, "nav", selected = "Step 4: Review and Download")
   })
+  
   
   output$editableTable <- renderDT({
     req(spatialData())
@@ -689,7 +765,7 @@ server <- function(input, output, session) {
         fontWeight = 'bold',
         color = 'black',
         backgroundColor = styleEqual(c(1, 0), c('lightblue', 'lightgrey'))
-      )
+      )  
     
   }, server = FALSE)
   
