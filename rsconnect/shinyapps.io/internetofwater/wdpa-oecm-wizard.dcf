@@ -1,0 +1,13 @@
+name: wdpa-oecm-wizard
+title: wdpa-oecm-wizard
+username: internetofwater
+account: internetofwater
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11593149
+bundleId: 8955718
+url: https://internetofwater.shinyapps.io/wdpa-oecm-wizard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .github/workflows/main.yml|LICENSE|R/app.R|README.md

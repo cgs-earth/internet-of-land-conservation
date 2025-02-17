@@ -13,6 +13,248 @@ library(dplyr)
 library(collapse)
 
 
+# Define validation rules
+validation_rules <- list(
+  WDPAID = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  WDPA_PID = function(value) {
+    if (nchar(value) > 52) {
+      return("Must not exceed 52 characters")
+    }
+    NULL
+  },
+  PA_DEF = function(value) {
+    valid_values <- c("1", "0")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  NAME = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    NULL
+  },
+  ORIG_NAME = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    NULL
+  },
+  DESIG = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    NULL
+  },
+  DESIG_ENG = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    valid_values <- c("Ramsar Site, Wetland of International Importance", "UNESCO-MAB Biosphere Reserve", "World Heritage Site (natural or mixed)", "Baltic Sea Protected Area (HELCOM)", "Specially Protected Area (Cartagena Convention)", "Marine Protected Area (CCAMLR)", "Marine Protected Area (OSPAR)", "Site of Community Importance (Habitats Directive)", "Special Protection Area (Birds Directive)", "Specially Protected Areas of Mediterranean Importance (Barcelona Convention)")
+    if (!is.na(value) && !value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  DESIG_TYPE = function(value) {
+    valid_values <- c("National", "Regional", "International", "Not Applicable")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  IUCN_CAT = function(value) {
+    valid_values <- c("Ia", "Ib", "II", "III", "IV", "V", "VI", "Not Applicable", "Not Assigned", "Not Reported")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  INT_CRIT = function(value) {
+    if (nchar(value) > 100) {
+      return("Must not exceed 100 characters")
+    }
+    NULL
+  },
+  MARINE = function(value) {
+    valid_values <- c("0", "1", "2")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  REP_M_AREA = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  GIS_M_AREA = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  REP_AREA = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  GIS_AREA = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  NO_TAKE = function(value) {
+    valid_values <- c("All", "Part", "None", "Not Reported", "Not Applicable")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  NO_TK_AREA = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  STATUS = function(value) {
+    valid_values <- c("Proposed", "Inscribed", "Adopted", "Designated", "Established")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  STATUS_YR = function(value) {
+    if (!is.numeric(value) || nchar(value) > 12) {
+      return("Must be a number not exceeding 12 digits")
+    }
+    NULL
+  },
+  GOV_TYPE = function(value) {
+    valid_values <- c("Federal or national ministry or agency", "Sub-national ministry or agency", "Government-delegated management", "Transboundary governance", "Collaborative governance", "Joint governance", "Individual landowners", "Non-profit organisations", "For-profit organisations", "Indigenous peoples", "Local communities", "Not Reported")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  OWN_TYPE = function(value) {
+    valid_values <- c("State", "Communal", "Individual landowners", "For-profit organisations", "Non-profit organisations", "Joint ownership", "Multiple ownership", "Contested", "Not Reported")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  MANG_AUTH = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    NULL
+  },
+  MANG_PLAN = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    NULL
+  },
+  VERIF = function(value) {
+    valid_values <- c("State Verified", "Expert Verified", "Not Reported")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  },
+  METADATAID = function(value) {
+    if (!is.numeric(value)) {
+      return("Must be a number")
+    }
+    NULL
+  },
+  SUB_LOC = function(value) {
+    if (nchar(value) > 100) {
+      return("Must not exceed 100 characters")
+    }
+    NULL
+  },
+  PARENT_ISO3 = function(value) {
+    if (nchar(value) > 20) {
+      return("Must not exceed 20 characters")
+    }
+    NULL
+  },
+  ISO3 = function(value) {
+    valid_values <- c("AFG", "ALA", "ALB", "DZA", "ASM", "AND", "AGO", "AIA", "ATA", "ATG", "ARG", "ARM", "ABW", "AUS", "AUT", "AZE", "BHS", "BHR", "BGD", "BRB", "BLR", "BEL", "BLZ", "BEN", "BMU", "BTN", "BOL", "BES", "BIH", "BWA", "BVT", "BRA", "IOT", "BRN", "BGR", "BFA", "BDI", "CPV", "KHM", "CMR", "CAN", "CYM", "CAF", "TCD", "CHL", "CHN", "CXR", "CCK", "COL", "COM", "COG", "COD", "COK", "CRI", "CIV", "HRV", "CUB", "CUW", "CYP", "CZE", "DNK", "DJI", "DMA", "DOM", "ECU", "EGY", "SLV", "GNQ", "ERI", "EST", "SWZ", "ETH", "FLK", "FRO", "FJI", "FIN", "FRA", "GUF", "PYF", "ATF", "GAB", "GMB", "GEO", "DEU", "GHA", "GIB", "GRC", "GRL", "GRD", "GLP", "GUM", "GTM", "GGY", "GIN", "GNB", "GUY", "HTI", "HMD", "VAT", "HND", "HKG", "HUN", "ISL", "IND", "IDN", "IRN", "IRQ", "IRL", "IMN", "ISR", "ITA", "JAM", "JPN", "JEY", "JOR", "KAZ", "KEN", "KIR", "PRK", "KOR", "KWT", "KGZ", "LAO", "LVA", "LBN", "LSO", "LBR", "LBY", "LIE", "LTU", "LUX", "MAC", "MDG", "MWI", "MYS", "MDV", "MLI", "MLT", "MHL", "MTQ", "MRT", "MUS", "MYT", "MEX", "FSM", "MDA", "MCO", "MNG", "MNE", "MSR", "MAR", "MOZ", "MMR", "NAM", "NRU", "NPL", "NLD", "NCL", "NZL", "NIC", "NER", "NGA", "NIU", "NFK", "MKD", "MNP", "NOR", "OMN", "PAK", "PLW", "PSE", "PAN", "PNG", "PRY", "PER", "PHL", "PCN", "POL", "PRT", "PRI", "QAT", "REU", "ROU", "RUS", "RWA", "BLM", "SHN", "KNA", "LCA", "MAF", "SPM", "VCT", "WSM", "SMR", "STP", "SAU", "SEN", "SRB", "SYC", "SLE", "SGP", "SXM", "SVK", "SVN", "SLB", "SOM", "ZAF", "SGS", "SSD", "ESP", "LKA", "SDN", "SUR", "SJM", "SWE", "CHE", "SYR", "TWN", "TJK", "TZA", "THA", "TLS", "TGO", "TKL", "TON", "TTO", "TUN", "TUR", "TKM", "TCA", "TUV", "UGA", "UKR", "ARE", "GBR", "USA", "UMI", "URY", "UZB", "VUT", "VEN", "VNM", "VGB", "VIR", "WLF", "ESH", "YEM", "ZMB", "ZWE")
+    if (!value %in% valid_values) {
+      return(paste("Must be a valid ISO 3166-1 alpha-3 country code"))
+    }
+    NULL
+  },
+  SUPP_INFO = function(value) {
+    if (nchar(value) > 254) {
+      return("Must not exceed 254 characters")
+    }
+    NULL
+  },
+  CONS_OBJ = function(value) {
+    valid_values <- c("Primary", "Secondary", "Ancillary")
+    if (!value %in% valid_values) {
+      return(paste("Must be one of:", paste(valid_values, collapse = ", ")))
+    }
+    NULL
+  }
+)
+
+# Function to apply validations to a single value
+validate_value <- function(field, value, required) {
+  if (is.na(value)) {
+    if (required) {
+      return("Required field cannot be NA")
+    } else {
+      return("")
+    }
+  }
+  
+  if (field %in% names(validation_rules)) {
+    rule <- validation_rules[[field]]
+    result <- rule(value)
+    if (!is.null(result)) {
+      return(result)
+    }
+  }
+  
+  return("")
+}
+
+validate_data <- function(data, required_fields) {
+  validation_results <- data.frame(matrix(nrow = nrow(data), ncol = ncol(data), dimnames = list(NULL, names(data))))
+  total_validations <- nrow(data) * ncol(data)
+  current_validation <- 0
+  
+  for (col in names(data)) {
+    for (row in seq_len(nrow(data))) {
+      current_validation <- current_validation + 1
+      value <- data[[col]][row]
+      required <- col %in% required_fields
+      validation_result <- validate_value(col, value, required)
+      validation_results[[col]][row] <- validation_result
+      
+      # Print validation progress and details
+      progress <- sprintf("%.2f%%", (current_validation / total_validations) * 100)
+      cat(sprintf("Progress: %s | Field: %s | Value: %s | Result: %s\n", 
+                  progress, col, ifelse(is.na(value), "NA", value), ifelse(validation_result == "", "Valid", validation_result)))
+    }
+  }
+  
+  return(validation_results)
+}
 
 ui <-
   navbarPage(
@@ -33,6 +275,9 @@ ui <-
       }
       .warning {
       background-color: #FFCCCC; /* Light red background */
+      }
+    .invalid-cell {
+      background-color: #FFCCCC !important;
     }
     "
       )
@@ -253,24 +498,27 @@ ui <-
           hr(),
           downloadButton("download", "Download Package")
         ),
-        mainPanel(DTOutput("editableTable"),
-                  tags$style(
-                    HTML(
-                      "
-                                /* Custom CSS for DataTables input fields */
-                                table.dataTable input[type='text'] {
-                                  color: #000000; /* Black text color */
-                                  background-color: #FFFFFF; /* White background */
-                                }
-                                /* Custom CSS for DataTables input fields in focus */
-                                table.dataTable input[type='text']:focus {
-                                  color: #000000; /* Black text color for focus */
-                                  background-color: #FFFF00; /* Yellow background for focus */
-                                  border-color: #000000; /* Black border for focus */
-                                }
-                              "
-                    )
-                  ))
+        mainPanel(
+          DTOutput("editableTable"),
+          tags$style(
+            HTML(
+              "
+            /* Custom CSS for DataTables input fields */
+            table.dataTable input[type='text'] {
+              color: #000000; /* Black text color */
+              background-color: #FFFFFF; /* White background */
+            }
+            /* Custom CSS for DataTables input fields in focus */
+            table.dataTable input[type='text']:focus {
+              color: #000000; /* Black text color for focus */
+              background-color: #FFFF00; /* Yellow background for focus */
+              border-color: #000000; /* Black border for focus */
+            }
+            "
+            )
+          ),
+          actionButton("validateButton", "Validate")
+        )
       )
     )
   )
@@ -730,7 +978,7 @@ server <- function(input, output, session) {
     df <- dplyr::bind_rows(intermediate_df,df) 
     # df <- readr::type_convert(df)
     print(str(df))
-    
+    df <- df %>% select(fields)
     # Update the reactive value with the modified data frame
     spatialData(df)
     
@@ -738,53 +986,68 @@ server <- function(input, output, session) {
     #  updateNavbarPage(session, "nav", selected = "Step 4: Review and Download")
   })
   
-  
   output$editableTable <- renderDT({
     req(spatialData())
+    df <- spatialData()
+    
     datatable(
-      spatialData(),
+      df,
       editable = TRUE,
       options = list(
         autoWidth = TRUE,
-        # Automatically adjust column widths
-        columnDefs = list(list(
-          className = 'dt-center', targets = '_all'
-        )),
-        # Center align text
+        columnDefs = list(list(className = 'dt-center', targets = '_all')),
         pageLength = 10,
-        # Set number of rows per page
-        searchHighlight = TRUE # Highlight search terms
+        searchHighlight = TRUE
       ),
       class = 'cell-border stripe',
-      # Add cell borders and stripe styling
-      rownames = FALSE
-    ) %>%
+      rownames = FALSE,
+      selection = 'none'  # Disable row selection
+    ) %>% 
       formatStyle(
-        # Apply conditional formatting (example)
-        columns = 1:ncol(spatialData()),
-        fontWeight = 'bold',
-        color = 'black',
-        backgroundColor = styleEqual(c(1, 0), c('lightblue', 'lightgrey'))
-      )  
+        columns = names(df),
+        backgroundColor = styleEqual(c(NA), c('white'))
+      )
+  }, server = TRUE)
+  
+  observeEvent(input$validateButton, {
+    req(spatialData())
+    df <- spatialData()
+    required_fields <- c("WDPAID", "WDPA_PID", "PA_DEF", "NAME", "ORIG_NAME", "DESIG", "DESIG_TYPE", "INT_CRIT", "MARINE", "REP_M_AREA", "GIS_M_AREA", "REP_AREA", "GIS_AREA", "STATUS", "STATUS_YR", "VERIF", "METADATAID", "PARENT_ISO3", "ISO3")
+    validation_results <- validate_data(df, required_fields)
     
-  }, server = FALSE)
+    # Create a list to store cell styling information
+    cell_styling <- list()
+    
+    for (col in names(df)) {
+      for (row in seq_len(nrow(df))) {
+        if (validation_results[[col]][row] != "") {
+          df[[col]][row] <- paste0(df[[col]][row], " (", validation_results[[col]][row], ")")
+          
+          # Add styling information for invalid cells
+          cell_styling <- c(cell_styling, list(list(row = row, col = which(names(df) == col) - 1, className = 'invalid-cell')))
+        }
+      }
+    }
+    
+    spatialData(df)
+    
+    # Update the DataTable with new data and cell styling
+    dataTableProxy('editableTable') %>%
+      updateCellStyle(cell_styling) %>%
+      replaceData(df, rownames = FALSE)
+  })
   
-  
-  # Observe changes in the DataTable and update spatialData accordingly
   observeEvent(input$editableTable_cell_edit, {
     info <- input$editableTable_cell_edit
-    str(info) # For debugging
-    
-    # Adjust column indexing for R
-    correctedCol <- info$col + 1
+    i <- info$row
+    j <- info$col + 1  # Adjust for zero-based index
+    v <- info$value
     
     df <- spatialData()
-    if (correctedCol <= ncol(df)) {
-      df[info$row, correctedCol] <-
-        DT::coerceValue(info$value, df[info$row, correctedCol])
-      spatialData(df) # Update the attribute data
-    }
+    df[i, j] <- DT::coerceValue(v, df[i, j])
+    spatialData(df)
   })
+  
   
   output$download <- downloadHandler(
     filename = function() {
@@ -792,31 +1055,28 @@ server <- function(input, output, session) {
       paste("package-", timestamp, ".zip", sep = "")
     },
     content = function(file) {
-      validationMessage <- validateStandard3(spatialData())
-      if (!is.null(validationMessage)) {
-        showModal(
-          modalDialog(
-            title = "Validation Error",
-            validationMessage,
-            easyClose = TRUE,
-            footer = modalButton("Close")
-          )
-        )
-        stop(validationMessage)  # Prevent download
-      }
       timestamp <- format(Sys.time(), "%Y%m%d-%H%M%S")
       geojsonFile <- paste0("data-", timestamp, ".geojson")
       metadataFile <- "metadata.csv"
-      st_write(spatialData(),
-               geojsonFile,
-               driver = "GeoJSON",
-               append = FALSE)
+      validationFile <- "validation_report.csv"
+      
+      # Perform data validation
+      required_fields <- c("WDPAID", "WDPA_PID", "PA_DEF", "NAME", "ORIG_NAME", "DESIG", "DESIG_TYPE", "INT_CRIT", "MARINE", "REP_M_AREA", "GIS_M_AREA", "REP_AREA", "GIS_AREA", "STATUS", "STATUS_YR", "VERIF", "METADATAID", "PARENT_ISO3", "ISO3")
+      validation_results <- validate_data(spatialData(), required_fields)
+      
+      # Write validation report to CSV
+      write.csv(validation_results, validationFile, row.names = FALSE)
+      
+      # Write GeoJSON and metadata files
+      st_write(spatialData(), geojsonFile, driver = "GeoJSON", append = FALSE)
+      
       metadataList <- reactiveValuesToList(metadata)
       metadataDf <- rev(stack(metadata))
       colnames(metadataDf) <- c("MetadataElement", "Value")
-      # metadataDf <- data.frame(key = names(metadataList), value = unlist(metadataList), stringsAsFactors = FALSE)
       write.csv(metadataDf, metadataFile, row.names = FALSE)
-      zip(file, files = c(geojsonFile, metadataFile))
+      
+      # Create zip file with data, metadata, and validation report
+      zip(file, files = c(geojsonFile, metadataFile, validationFile))
     }
   )
   
